@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  mariadb:
+    image: bitnami/mariadb
+    restart: always
+    container_name: mariadb
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mariadb:/bitnami/mariadb
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_USER=admin
+      - MARIADB_PASSWORD=admin
+      - MARIADB_DATABASE=keycloak
+    networks:
+      - keycloak-network
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    container_name: phpmyadmin
+    ports:
+      - 8181:80
+    environment:
+      - PMA_HOST=mariadb
+    links: 
+      - mariadb
+    depends_on:
+      - mariadb
+    networks:
+      - keycloak-network
+
+  keycloak:
+    image: jboss/keycloak
+    restart: always
+    container_name: keycloak
+    ports:
+      - 8080:8080
+    environment:
+      - DB_VENDOR=mariadb
+      - DB_ADDR=mariadb
+      - DB_USER=admin
+      - DB_PASSWORD=admin
+      - DB_DATABASE=keycloak
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+    depends_on:
+      - mariadb
+    networks:
+      - keycloak-network
+
+networks:
+  keycloak-network:
+    driver: bridge
